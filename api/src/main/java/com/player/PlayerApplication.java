@@ -1,13 +1,13 @@
-package com.videoplayer;
+package com.player;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class VideoPlayerApplication {
+public class PlayerApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(VideoPlayerApplication.class, args);
+        SpringApplication.run(PlayerApplication.class, args);
     }
 
 }

@@ -1,10 +1,10 @@
-package com.videoplayer;
+package com.player;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class VideoPlayerApplicationTests {
+class PlayerApplicationTests {
 
     @Test
     void contextLoads() {
