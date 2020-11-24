@@ -25,6 +25,9 @@ dependencies {
     runtimeOnly 'org.postgresql:postgresql'
     annotationProcessor 'org.projectlombok:lombok'
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testCompile group: 'org.mockito', name: 'mockito-core', version: '3.5.13'
+    compile group: 'javax.validation', name: 'validation-api', version: '2.0.1.Final'
+
 }
 
 test {

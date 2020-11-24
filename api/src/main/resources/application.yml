@@ -1,0 +1,20 @@
+spring:
+  datasource:
+    url: jdbc:postgresql://${CONTAINER_DB:localhost}:5432/player-db
+    username: haxul
+    password: password
+    driver-class-name: org.postgresql.Driver
+  jpa:
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+  servlet:
+     multipart:
+       max-request-size: 500MB
+       max-file-size: 500MB
+
+files-path: ${FILES_PATH:/home/haxul/Develop/video-player/api/files}
+
+logging:
+  file:
+    path: ${LOG_FILE:/home/haxul/Develop/video-player/api/loges}
