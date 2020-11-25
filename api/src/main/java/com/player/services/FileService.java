@@ -5,7 +5,6 @@ import com.player.entities.FileEntity;
 import com.player.exceptions.UnsupportedFileException;
 import com.player.repos.FileRepo;
 import lombok.SneakyThrows;
-import lombok.extern.log4j.Log4j;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -16,7 +15,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
-import java.util.Objects;
+import java.util.*;
 
 @Service
 @Slf4j
@@ -30,12 +29,11 @@ public class FileService {
 
     @SneakyThrows
     public FileDto save(MultipartFile inputFile, String dir) {
-        // TODO check name of input file and dir
         /*
           define filename and extension and set codedName
          */
 
-        FileDto fileDto = splitFileByDot(Objects.requireNonNull(inputFile.getOriginalFilename()));
+        FileDto fileDto = buildFileDto(Objects.requireNonNull(inputFile.getOriginalFilename()));
         String relativePath = dir == null ? "/" + inputFile.getOriginalFilename() : "/" + dir + "/" + inputFile.getOriginalFilename();
         fileDto.setPath(relativePath);
         fileDto.setDir(dir);
@@ -85,12 +83,23 @@ public class FileService {
     }
 
     @SneakyThrows
-    private FileDto splitFileByDot(String filename) {
-        String[] splitted = filename.split("\\.");
-        if (splitted.length != 2) throw new UnsupportedFileException("extension is not found");
+    public List<String> checkFileNaming(LinkedList<String> fileNamePaths) {
+        if (fileNamePaths.isEmpty()) return Collections.emptyList();
+        var head = fileNamePaths.getFirst();
+        if (!head.matches("^[a-zA-Z0-9]{1,40}$")) return List.of(head);
+        fileNamePaths.removeFirst();
+        return checkFileNaming(fileNamePaths);
+    }
+
+    @SneakyThrows
+    private FileDto buildFileDto(String filename) {
+        var splitted = new LinkedList<>(Arrays.asList((filename.split("\\."))));
+        if (splitted.size() != 2) throw new UnsupportedFileException("extension is not found");
+        List<String> wrongFileNames = checkFileNaming(new LinkedList<>(splitted));
+        if (!wrongFileNames.isEmpty()) throw new UnsupportedFileException("incorrect naming in file: " + wrongFileNames.get(0));
         var file = new FileDto();
-        file.setName(splitted[0]);
-        file.setExtension(splitted[1]);
+        file.setName(splitted.getFirst());
+        file.setExtension(splitted.getLast());
         return file;
     }
 
