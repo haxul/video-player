@@ -2,10 +2,12 @@ package com.player.services;
 
 import com.player.dto.FileDto;
 import com.player.entities.FileEntity;
+import com.player.exceptions.FileOperationException;
 import com.player.exceptions.UnsupportedFileException;
 import com.player.repos.FileRepo;
 import lombok.SneakyThrows;
 import lombok.extern.slf4j.Slf4j;
+import org.apache.tomcat.util.http.fileupload.FileUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
@@ -16,6 +18,7 @@ import java.io.IOException;
 import java.nio.file.FileAlreadyExistsException;
 import java.nio.file.FileSystemException;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 @Slf4j
@@ -24,8 +27,12 @@ public class FileService {
     @Autowired
     private FileRepo fileRepo;
 
-    @Value("${files-path}")
-    private String FILES_PATH;
+
+    private final String FILES_PATH;
+
+    public FileService(@Value("${files-path}") String files_path) {
+        FILES_PATH = files_path;
+    }
 
     @SneakyThrows
     public FileDto save(MultipartFile inputFile, String dir) {
@@ -96,7 +103,8 @@ public class FileService {
         var splitted = new LinkedList<>(Arrays.asList((filename.split("\\."))));
         if (splitted.size() != 2) throw new UnsupportedFileException("extension is not found");
         List<String> wrongFileNames = checkFileNaming(new LinkedList<>(splitted));
-        if (!wrongFileNames.isEmpty()) throw new UnsupportedFileException("incorrect naming in file: " + wrongFileNames.get(0));
+        if (!wrongFileNames.isEmpty())
+            throw new UnsupportedFileException("incorrect naming in file: " + wrongFileNames.get(0));
         var file = new FileDto();
         file.setName(splitted.getFirst());
         file.setExtension(splitted.getLast());
@@ -111,5 +119,26 @@ public class FileService {
         } catch (IOException e) {
             throw new UnsupportedFileException(e.getMessage());
         }
+    }
+
+    @SneakyThrows
+    public void removeAll()  {
+        CompletableFuture<Boolean> cleanDirectoryFuture = cleanDirectory(new File(FILES_PATH));
+        fileRepo.deleteAll();
+        Boolean isRemoved = cleanDirectoryFuture.get();
+        if (!isRemoved) throw new FileOperationException();
+        log.info("all files are removed");
+    }
+
+    private CompletableFuture<Boolean> cleanDirectory(File dir) {
+        return CompletableFuture.supplyAsync(() -> {
+            try {
+                FileUtils.cleanDirectory(dir);
+                return true;
+            } catch (IOException e) {
+                log.error("Cannot remove files: " + e);
+                return false;
+            }
+        });
     }
 }

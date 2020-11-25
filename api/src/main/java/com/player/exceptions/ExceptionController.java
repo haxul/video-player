@@ -29,6 +29,14 @@ public class ExceptionController  {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
+    @ExceptionHandler(FileOperationException.class)
+    public ResponseEntity<ErrorResponse> handleException(FileOperationException e) {
+        var response = new ErrorResponse();
+        response.setCause(FileOperationException.class.toString());
+        response.setMessage(e.getMessage());
+        return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(response);
+    }
+
     @ExceptionHandler(MultipartException.class)
     public ResponseEntity<ErrorResponse> handleMultipartException(MultipartException ex) {
         var response = new ErrorResponse();
